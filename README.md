@@ -8,7 +8,7 @@
 
 This code will act as the [webhook fulfillment](https://docs.api.ai/docs/webhook) endpoint for a [DialogFlow](https://console.dialogflow.com) 
 
-This project will return the taxes of a property in NB, Canada by querying a provincial government public web service/ It works with Google Home if you say *"ok google ask N B P A O L"* it will start a dialog to find the property taxes
+This project will return the taxes of a property in NB, Canada by querying a provincial government public web service/ It works with Google Home if you say *"ok google ask New Brunswick Property Assessment Online"* it will start a dialog to find the property taxes
 
 <!-- [Work Flow](https://drive.google.com/file/d/1nB9Ej2tU7lEbJvR39t49EQjLhnO6b0tg/view?usp=sharing) -->
 
