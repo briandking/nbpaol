@@ -2,6 +2,22 @@
 // where your node app starts
 // Diagram: https://www.draw.io/#G1nB9Ej2tU7lEbJvR39t49EQjLhnO6b0tg
 
+// TODO: add extra actions like:
+//  - lookup pan
+//  - lookup last sale
+//  - count number of sales in neighbourhood
+//  - summary info about surrounding sales. e.g.:
+//    - total sales in area
+//    - total properties sold in area
+//    - average sale price in area
+//    - ranking of sale/assessed value in area (by percentile?)
+// TODO: add date to assessment
+// TODO: add last assessed value and % increase
+// TODO: add last taxed value and % increase
+// TODO: different behaviours based on actions.capability/or input type? (screen, audio, web)
+// TODO: add some personilization based on user.userId/user.lastSeen (store last request? users name (optional)?)
+
+
 // init project
 const express = require('express');
 const ApiAiAssistant = require('actions-on-google').ApiAiAssistant;
@@ -77,6 +93,7 @@ app.post('/', function(req, res, next) {
           if(!address){
             address=req.body.result.parameters.any +" "+req.body.result.parameters.StreetTypes
           }
+        // TODO: if still !address, request an address from the user
           var getData = "?s="+address;
           url = url+getData;
           var pan;
