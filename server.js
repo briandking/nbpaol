@@ -65,7 +65,7 @@ app.post('/', function(req, res, next) {
     // currently unused - returns single answer without dialog
     // eventually, this will welcome users and have a dialog
     console.log('Handling action: ' + WELCOME_ACTION);
-    assistant.tell('Hello, welcome to is school open');
+    assistant.tell('Hello, welcome to New Brunswick Property Assessment Online, the google home edition');
   }
     
   function lookupPan(assistant,getpan) {
@@ -74,7 +74,9 @@ app.post('/', function(req, res, next) {
         // https://paol.snb.ca/pas-shim/api/paol/dossier/00xxxxxx
           var dossierurl='https://paol.snb.ca/pas-shim/api/paol/dossier';
           var address=req.body.result.parameters.address;
-          console.log(typeof(req.body));
+          if(!address){
+            address=req.body.result.parameters.any +" "+req.body.result.parameters.StreetTypes
+          }
           var getData = "?s="+address;
           url = url+getData;
           var pan;
@@ -90,43 +92,51 @@ app.post('/', function(req, res, next) {
                   //Retrieve PAN from JSON
                   // /SearchResultsByGroup/0/results/0/pan
                   var json=JSON.parse(response.body);
-                  pan=json.searchResultsByGroup[0].results[0].pan;
-                  var location=json.searchResultsByGroup[0].results[0].location;
-                  logObject('Results from PAOL WS: ', json);
-                  console.log('Request for PAN Succeeded: ', address,"=",pan);
+                  if(!json.searchResultsByGroup || !json.searchResultsByGroup.length)
+                    // TODO: try massaging the address a bit (drop last word, etc)
+                    {assistant.tell("I was unable to find any results for that address")}
+                  else{
+                    // TODO: if json.searchResultsByGroup.length>1, then implement a choice list
+                    logObject('+++++ Results from PAOL WS: ', json);
+                    pan=json.searchResultsByGroup[0].results[0].pan;
+                    var location=json.searchResultsByGroup[0].results[0].location;
+                    console.log('Request for PAN Succeeded: ', address,"=",pan);
                   }
-                  else {
+                }
+                else {  // no pan and location found
                     let json = JSON.parse(response.body);
                     console.log('Request Failed: ' + response.header + json);
                     assistant.tell("Request for PAN failed with HTTP response: "+response.statusCode);
-                  }
-    
-          dossierurl=dossierurl+"/"+pan;
-          console.log("Getting URL: ",dossierurl);
-          var options = {
-              method: 'get',
-              uri: dossierurl,
-              headers: {
-                  "Cookie": "paolLicenseAccepted=accepted",
-              }
-          }
-          request(options, function (error, response) {
-              if (!error && response.statusCode == 200) {
-                  var dosierjson=JSON.parse(response.body);
-                  logObject('Results from PAOL Dossier WS: ', dosierjson);
-                  var current_assessment=dosierjson.summary.currAsst;
-                  var current_taxes=dosierjson.summary.curLevy;
-                  console.log('Request for Dossier Succeeded: Assessment= $', current_assessment," and taxes = $",current_taxes);
-                  assistant.tell("The Pan for "+location+" is "+pan+
-                                 " and the current assessment is $"+current_assessment+
-                                 " with taxes of $"+current_taxes);
-                  }
-                  else {
-                    let json = JSON.parse(response.body);
-                    console.log('Request Failed: ' + response.header + json);
-                    assistant.tell("Request for Dossier failed with HTTP response: "+response.statusCode);
-                  }
-          });
+                }
+              if(pan){
+                    dossierurl=dossierurl+"/"+pan;
+                    console.log("Getting URL: ",dossierurl);
+                    var options = {
+                        method: 'get',
+                        uri: dossierurl,
+                        headers: {
+                            "Cookie": "paolLicenseAccepted=accepted",
+                        }
+                    }
+                
+                    request(options, function (error, response) {
+                        if (!error && response.statusCode == 200) {
+                            var dosierjson=JSON.parse(response.body);
+                            logObject('Results from PAOL Dossier WS: ', dosierjson);
+                            var current_assessment=dosierjson.summary.currAsst;
+                            var current_taxes=dosierjson.summary.curLevy;
+                            console.log('Request for Dossier Succeeded: Assessment= $', current_assessment," and taxes = $",current_taxes);
+                            assistant.tell("The Pan for "+location+" is "+pan+
+                                           " and the current assessment is $"+current_assessment+
+                                           " with taxes of $"+current_taxes);
+                            }
+                            else {
+                              let json = JSON.parse(response.body);
+                              console.log('Request Failed: ' + response.header + json);
+                              assistant.tell("Request for Dossier failed with HTTP response: "+response.statusCode);
+                            }
+                    });
+              } // if pan found
       });
   }
     
